@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
+import { quoteFontFamily } from "~/lib/font-loader";
 import { SLIDE_WIDTH, type SlideScene } from "~/lib/scene";
 import { normalizeDoc } from "~/lib/slide-doc";
 import { cn } from "~/lib/utils";
+import { useGoogleFonts } from "./use-google-fonts";
 
 /** A lightweight, SSR-safe DOM rendering of a slide document — used for
  * filmstrip thumbnails and deck previews. It mirrors the Konva canvas closely
@@ -16,6 +18,11 @@ export function SlidePreview({
 }) {
   const doc = normalizeDoc(scene);
   const cqw = (px: number) => `${(px / SLIDE_WIDTH) * 100}cqw`;
+
+  // Load any Google Fonts the slide references so the preview renders in-font.
+  useGoogleFonts(
+    doc.elements.flatMap((el) => (el.type === "text" ? [el.fontFamily] : [])),
+  );
 
   return (
     <div
@@ -62,7 +69,7 @@ export function SlidePreview({
               ...base,
               color: el.fill,
               fontSize: cqw(el.fontSize),
-              fontFamily: el.fontFamily,
+              fontFamily: quoteFontFamily(el.fontFamily),
               textAlign: el.align,
               fontWeight: el.fontStyle.includes("bold") ? 700 : 400,
               fontStyle: el.fontStyle.includes("italic") ? "italic" : "normal",

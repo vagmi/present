@@ -1,12 +1,5 @@
 import { getAuth } from "@clerk/react-router/server";
-import {
-  ArrowLeft,
-  Image as ImageIcon,
-  Plus,
-  Square,
-  Trash2,
-  Type,
-} from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Plus, Square, Trash2 } from "lucide-react";
 import {
   lazy,
   Suspense,
@@ -17,7 +10,10 @@ import {
 } from "react";
 import { Link, redirect, useNavigate } from "react-router";
 import { ClientOnly } from "~/components/editor/client-only";
+import { ColorPicker } from "~/components/editor/color-picker";
+import { FontPicker } from "~/components/editor/font-picker";
 import { SlidePreview } from "~/components/editor/slide-preview";
+import { TextPresetMenu } from "~/components/editor/text-preset-menu";
 import { Button } from "~/components/ui/button";
 import { apiFetch } from "~/lib/api-client.server";
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from "~/lib/scene";
@@ -25,12 +21,12 @@ import {
   addElement,
   newImage,
   newRect,
-  newText,
   normalizeDoc,
   removeElement,
   reorderElement,
   type SlideDoc,
   type SlideElement,
+  type TextElement,
   updateElement,
 } from "~/lib/slide-doc";
 import { cn } from "~/lib/utils";
@@ -198,7 +194,7 @@ function Editor({
         presentation={presentation}
         saveState={saveState}
         hasSelection={!!selected}
-        onAddText={() => addAndSelect(newText())}
+        onAddText={addAndSelect}
         onAddRect={() => addAndSelect(newRect())}
         onAddImage={() => {
           const url = window.prompt("Image URL");
@@ -280,7 +276,7 @@ function Toolbar({
   presentation: Presentation;
   saveState: SaveState;
   hasSelection: boolean;
-  onAddText: () => void;
+  onAddText: (el: TextElement) => void;
   onAddRect: () => void;
   onAddImage: () => void;
   onDelete: () => void;
@@ -303,9 +299,7 @@ function Toolbar({
       <div className="bg-border h-6 w-px" />
 
       <div className="flex items-center gap-1">
-        <ToolButton label="Text" onClick={onAddText}>
-          <Type />
-        </ToolButton>
+        <TextPresetMenu onAdd={onAddText} />
         <ToolButton label="Shape" onClick={onAddRect}>
           <Square />
         </ToolButton>
@@ -428,28 +422,6 @@ function NumberField({
   );
 }
 
-function ColorField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="flex items-center justify-between gap-2">
-      <span className="text-muted-foreground text-[11px]">{label}</span>
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="border-input h-7 w-10 cursor-pointer rounded-md border bg-transparent"
-      />
-    </label>
-  );
-}
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="form-label-mono text-muted-foreground mb-2">{children}</p>;
 }
@@ -474,7 +446,7 @@ function Inspector({
       {!selected ? (
         <div>
           <SectionLabel>Slide</SectionLabel>
-          <ColorField
+          <ColorPicker
             label="Background"
             value={doc.background}
             onChange={onBackground}
@@ -586,18 +558,25 @@ function TextControls({
         rows={3}
         className="border-input bg-background focus-visible:ring-ring w-full resize-none rounded-md border px-2 py-1.5 text-sm outline-none focus-visible:ring-2"
       />
-      <Row>
-        <NumberField
-          label="Size"
-          value={el.fontSize}
-          onChange={(v) => onPatch(el.id, { fontSize: v })}
-        />
-        <ColorField
-          label="Color"
-          value={el.fill}
-          onChange={(v) => onPatch(el.id, { fill: v })}
-        />
-      </Row>
+      <div>
+        <span className="text-muted-foreground text-[11px]">Font</span>
+        <div className="mt-0.5">
+          <FontPicker
+            value={el.fontFamily}
+            onChange={(fontFamily) => onPatch(el.id, { fontFamily })}
+          />
+        </div>
+      </div>
+      <NumberField
+        label="Size"
+        value={el.fontSize}
+        onChange={(v) => onPatch(el.id, { fontSize: v })}
+      />
+      <ColorPicker
+        label="Color"
+        value={el.fill}
+        onChange={(v) => onPatch(el.id, { fill: v })}
+      />
       <div className="flex gap-1">
         {(["left", "center", "right"] as const).map((a) => (
           <button
@@ -654,7 +633,7 @@ function RectControls({
 }) {
   return (
     <div className="space-y-2">
-      <ColorField
+      <ColorPicker
         label="Fill"
         value={el.fill}
         onChange={(v) => onPatch(el.id, { fill: v })}

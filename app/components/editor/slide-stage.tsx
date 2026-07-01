@@ -16,6 +16,7 @@ import type {
   SlideElement,
   TextElement,
 } from "~/lib/slide-doc";
+import { useGoogleFonts } from "./use-google-fonts";
 
 // The interactive canvas. Coordinates are in the 960×540 slide space; the whole
 // Stage is scaled to fit its container via `scale`. Never imported on the server
@@ -49,6 +50,24 @@ function commitTransform(node: Konva.Node, onChange: NodeChange, id: string) {
     y: Math.round(node.y()),
     width: Math.max(8, Math.round(node.width() * scaleX)),
     height: Math.max(8, Math.round(node.height() * scaleY)),
+    rotation: Math.round(node.rotation()),
+  });
+}
+
+/** Text resizes its box, not its glyphs: the horizontal drag changes the wrap
+ * width (font size is untouched) and the height auto-fits the wrapped text — so
+ * the box is never smaller than the text it holds. */
+function commitTextTransform(node: Konva.Node, onChange: NodeChange, id: string) {
+  const scaleX = node.scaleX();
+  node.scaleX(1);
+  node.scaleY(1);
+  const width = Math.max(24, Math.round(node.width() * scaleX));
+  node.width(width);
+  onChange(id, {
+    x: Math.round(node.x()),
+    y: Math.round(node.y()),
+    width,
+    height: Math.round(node.height()),
     rotation: Math.round(node.rotation()),
   });
 }
@@ -110,6 +129,7 @@ function TextNode({ el, onSelect, onChange, register }: NodeProps<TextElement>) 
       align={el.align}
       fill={el.fill}
       {...commonHandlers(el, onSelect, onChange)}
+      onTransformEnd={(e) => commitTextTransform(e.target, onChange, el.id)}
     />
   );
 }
@@ -167,6 +187,16 @@ export default function SlideStage({
 }: SlideStageProps) {
   const nodes = useRef<Record<string, Konva.Node>>({});
   const trRef = useRef<Konva.Transformer>(null);
+  const layerRef = useRef<Konva.Layer>(null);
+
+  // Load the fonts this slide uses; Konva won't reflow when a webfont arrives
+  // late, so redraw the layer each time one becomes ready.
+  const fontTick = useGoogleFonts(
+    doc.elements.flatMap((el) => (el.type === "text" ? [el.fontFamily] : [])),
+  );
+  useEffect(() => {
+    layerRef.current?.batchDraw();
+  }, [fontTick]);
 
   const register = (id: string, node: Konva.Node | null) => {
     if (node) nodes.current[id] = node;
@@ -178,8 +208,27 @@ export default function SlideStage({
   useEffect(() => {
     const tr = trRef.current;
     if (!tr) return;
+    const selected = selectedId
+      ? doc.elements.find((el) => el.id === selectedId)
+      : null;
     const target = selectedId ? nodes.current[selectedId] : null;
     tr.nodes(target ? [target] : []);
+    // Text only gets side handles (resize the box → re-wrap); shapes/images get
+    // the full set of corner + side handles (scale).
+    tr.enabledAnchors(
+      selected?.type === "text"
+        ? ["middle-left", "middle-right"]
+        : [
+            "top-left",
+            "top-center",
+            "top-right",
+            "middle-left",
+            "middle-right",
+            "bottom-left",
+            "bottom-center",
+            "bottom-right",
+          ],
+    );
     tr.getLayer()?.batchDraw();
   }, [selectedId, doc]);
 
@@ -193,7 +242,7 @@ export default function SlideStage({
         if (e.target === e.target.getStage()) onSelect(null);
       }}
     >
-      <Layer>
+      <Layer ref={layerRef}>
         <Rect
           x={0}
           y={0}
