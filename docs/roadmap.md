@@ -48,7 +48,7 @@ any phase; Phase 7 is the formal production cutover.
 
 ## Phases
 
-### [ ] Phase 1 — Presentations (decks)
+### [x] Phase 1 — Presentations (decks)
 
 **Goal:** a user can sign in and create, list, rename, and delete presentations
 (title + metadata only — no slides yet). This is the smallest end-to-end slice
@@ -75,7 +75,7 @@ and reuses the working `items` code.
 **Done when:** sign in → create a presentation → see it in the list; free-plan
 limit blocks the 4th; `pnpm test` green; deploys.
 
-### [ ] Phase 2 — Slides (nested under a deck)
+### [x] Phase 2 — Slides (nested under a deck)
 
 **Goal:** within a presentation, a user can add, reorder, and delete slides; each
 slide stores its Konva scene as JSON. Managed as a list (visual editor is
@@ -101,7 +101,7 @@ Phase 3).
 **Done when:** open a deck → add/reorder/delete slides and they persist;
 `pnpm test` green; deploys.
 
-### [ ] Phase 3 — Konva canvas editor
+### [x] Phase 3 — Konva canvas editor
 
 **Goal:** the core editor loop — open a slide, edit shapes/text/images on a
 Konva.js canvas, and save the scene JSON back to the slide.

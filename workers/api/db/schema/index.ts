@@ -3,3 +3,4 @@ export * from "./users";
 export * from "./memberships";
 export * from "./usage-counters";
 export * from "./presentations";
+export * from "./slides";

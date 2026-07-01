@@ -8,6 +8,13 @@
       "when": 1782943267223,
       "tag": "0000_worried_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1782944635611,
+      "tag": "0001_kind_groot",
+      "breakpoints": true
     }
   ]
 }

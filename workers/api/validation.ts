@@ -15,3 +15,16 @@ export const presentationUpdateSchema = z
 
 export type PresentationCreateInput = z.infer<typeof presentationCreateSchema>;
 export type PresentationUpdateInput = z.infer<typeof presentationUpdateSchema>;
+
+// Slides. The `scene` is the Konva stage JSON — an object whose inner shape is
+// owned by the editor, so we validate it as a generic JSON object here.
+export const slideSceneSchema = z.object({
+  scene: z.record(z.string(), z.unknown()),
+});
+
+export const slideReorderSchema = z.object({
+  orderedIds: z.array(z.string().min(1)).min(1),
+});
+
+export type SlideSceneInput = z.infer<typeof slideSceneSchema>;
+export type SlideReorderInput = z.infer<typeof slideReorderSchema>;

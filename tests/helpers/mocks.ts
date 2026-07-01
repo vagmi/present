@@ -1,7 +1,9 @@
 import { vi } from "vitest";
+import { emptyScene } from "~/lib/scene";
 import type { Membership } from "../../workers/api/repositories/memberships-repo";
 import type { Organization } from "../../workers/api/repositories/organizations-repo";
 import type { Presentation } from "../../workers/api/repositories/presentations-repo";
+import type { Slide } from "../../workers/api/repositories/slides-repo";
 import type { User } from "../../workers/api/repositories/users-repo";
 
 export function fakeOrg(overrides: Partial<Organization> = {}): Organization {
@@ -56,6 +58,42 @@ export function mockPresentationsService() {
     get: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
+  };
+}
+
+export function fakeSlide(overrides: Partial<Slide> = {}): Slide {
+  return {
+    id: "slide_1",
+    orgId: "org_test_1",
+    presentationId: "pres_1",
+    position: 0,
+    scene: emptyScene(),
+    createdAt: 1_700_000_000,
+    updatedAt: 1_700_000_000,
+    ...overrides,
+  };
+}
+
+export function mockSlidesRepo() {
+  return {
+    create: vi.fn(),
+    getById: vi.fn(),
+    listByPresentation: vi.fn(),
+    countByPresentation: vi.fn(),
+    updateScene: vi.fn(),
+    updatePosition: vi.fn(),
+    delete: vi.fn(),
+  };
+}
+
+export function mockSlidesService() {
+  return {
+    list: vi.fn(),
+    get: vi.fn(),
+    add: vi.fn(),
+    updateScene: vi.fn(),
+    reorder: vi.fn(),
     delete: vi.fn(),
   };
 }

@@ -12,6 +12,18 @@ export default [
   // Org-scoped dashboard. Add your own resource routes alongside `presentations`.
   route("app", "routes/app/layout.tsx", [
     index("routes/app/presentations-list.tsx"),
+    // Opening a presentation redirects straight into the editor (first slide).
+    route(
+      "presentations/:presentationId/edit",
+      "routes/app/presentation-open.tsx",
+    ),
     route("members", "routes/app/members.tsx"),
   ]),
+
+  // Full-screen editor — lives OUTSIDE the dashboard layout so it can own the
+  // whole viewport (Google-Slides-style panels).
+  route(
+    "editor/:presentationId/:slideId",
+    "routes/editor/slide-editor.tsx",
+  ),
 ] satisfies RouteConfig;

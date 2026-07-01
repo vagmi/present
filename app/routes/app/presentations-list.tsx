@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useFetcher } from "react-router";
+import { Link, useFetcher } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import {
@@ -121,7 +121,12 @@ function PresentationCard({
           </button>
         </fetcher.Form>
       </div>
-      <h2 className="mt-2 truncate text-xl">{presentation.title}</h2>
+      <Link
+        to={`/app/presentations/${presentation.id}/edit`}
+        className="hover:text-primary mt-2 block truncate text-xl transition-colors"
+      >
+        {presentation.title}
+      </Link>
       <div className="rule-perforated mt-4" />
       <p className="form-label-mono text-muted-foreground/70 mt-3 text-[10px]">
         {dateFormat.format(new Date(presentation.updatedAt * 1000))}
