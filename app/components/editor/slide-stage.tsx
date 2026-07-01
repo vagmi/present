@@ -1,4 +1,4 @@
-import type Konva from "konva";
+import Konva from "konva";
 import { useEffect, useRef, useState } from "react";
 import {
   Image as KonvaImage,
@@ -9,12 +9,13 @@ import {
   Transformer,
 } from "react-konva";
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from "~/lib/scene";
-import type {
-  ImageElement,
-  RectElement,
-  SlideDoc,
-  SlideElement,
-  TextElement,
+import {
+  type ImageElement,
+  type RectElement,
+  resolveTextEffect,
+  type SlideDoc,
+  type SlideElement,
+  type TextElement,
 } from "~/lib/slide-doc";
 import { useGoogleFonts } from "./use-google-fonts";
 
@@ -114,10 +115,53 @@ function RectNode({ el, onSelect, onChange, register }: NodeProps<RectElement>) 
   );
 }
 
+function shadowFor(el: TextElement) {
+  const fx = resolveTextEffect(el.effect);
+  if (fx && (fx.type === "shadow" || fx.type === "glow")) {
+    return {
+      shadowEnabled: true,
+      shadowColor: fx.color,
+      shadowBlur: fx.blur,
+      shadowOffsetX: fx.offset,
+      shadowOffsetY: fx.offset,
+      shadowOpacity: fx.opacity,
+    };
+  }
+  return { shadowEnabled: false };
+}
+
 function TextNode({ el, onSelect, onChange, register }: NodeProps<TextElement>) {
+  const ref = useRef<Konva.Text | null>(null);
+  const fx = resolveTextEffect(el.effect);
+  const blurAmount = fx?.type === "blur" ? fx.amount : 0;
+
+  // The Blur filter needs the node cached; re-cache whenever its look changes.
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (blurAmount > 0) {
+      node.cache({ offset: Math.ceil(blurAmount) + 4, pixelRatio: 2 });
+    } else {
+      node.clearCache();
+    }
+    node.getLayer()?.batchDraw();
+  }, [
+    blurAmount,
+    el.text,
+    el.fontSize,
+    el.fontFamily,
+    el.fontStyle,
+    el.width,
+    el.fill,
+    el.align,
+  ]);
+
   return (
     <Text
-      ref={(n) => register(el.id, n)}
+      ref={(n) => {
+        ref.current = n;
+        register(el.id, n);
+      }}
       x={el.x}
       y={el.y}
       width={el.width}
@@ -128,6 +172,9 @@ function TextNode({ el, onSelect, onChange, register }: NodeProps<TextElement>) 
       fontStyle={el.fontStyle}
       align={el.align}
       fill={el.fill}
+      filters={blurAmount > 0 ? [Konva.Filters.Blur] : undefined}
+      blurRadius={blurAmount}
+      {...shadowFor(el)}
       {...commonHandlers(el, onSelect, onChange)}
       onTransformEnd={(e) => commitTextTransform(e.target, onChange, el.id)}
     />

@@ -1,9 +1,18 @@
 import type { CSSProperties } from "react";
 import { quoteFontFamily } from "~/lib/font-loader";
 import { SLIDE_WIDTH, type SlideScene } from "~/lib/scene";
-import { normalizeDoc } from "~/lib/slide-doc";
+import { normalizeDoc, resolveTextEffect } from "~/lib/slide-doc";
 import { cn } from "~/lib/utils";
 import { useGoogleFonts } from "./use-google-fonts";
+
+/** Append an alpha byte to a #rrggbb color; falls back to the color as-is. */
+function withAlpha(hex: string, opacity: number): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
+  const a = Math.round(Math.max(0, Math.min(1, opacity)) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `${hex}${a}`;
+}
 
 /** A lightweight, SSR-safe DOM rendering of a slide document — used for
  * filmstrip thumbnails and deck previews. It mirrors the Konva canvas closely
@@ -62,6 +71,18 @@ export function SlidePreview({
             />
           );
         }
+        const fx = resolveTextEffect(el.effect);
+        let textShadow: string | undefined;
+        let filter: string | undefined;
+        if (fx?.type === "shadow") {
+          const c = withAlpha(fx.color, fx.opacity);
+          textShadow = `${cqw(fx.offset)} ${cqw(fx.offset)} ${cqw(fx.blur)} ${c}`;
+        } else if (fx?.type === "glow") {
+          const c = withAlpha(fx.color, fx.opacity);
+          textShadow = `0 0 ${cqw(fx.blur)} ${c}, 0 0 ${cqw(fx.blur * 1.7)} ${c}`;
+        } else if (fx?.type === "blur") {
+          filter = `blur(${cqw(fx.amount)})`;
+        }
         return (
           <div
             key={el.id}
@@ -76,6 +97,8 @@ export function SlidePreview({
               lineHeight: 1.2,
               overflow: "hidden",
               whiteSpace: "pre-wrap",
+              textShadow,
+              filter,
             }}
           >
             {el.text}

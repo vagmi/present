@@ -26,6 +26,8 @@ import {
   reorderElement,
   type SlideDoc,
   type SlideElement,
+  type TextEffect,
+  type TextEffectType,
   type TextElement,
   updateElement,
 } from "~/lib/slide-doc";
@@ -400,6 +402,30 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-2">{children}</div>;
 }
 
+function RangeField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="mt-2 block">
+      <span className="text-muted-foreground text-[11px]">{label}</span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="accent-primary mt-1 w-full"
+      />
+    </label>
+  );
+}
+
 function NumberField({
   label,
   value,
@@ -550,6 +576,21 @@ function TextControls({
     const parts = [i ? "italic" : "", b ? "bold" : ""].filter(Boolean);
     onPatch(el.id, { fontStyle: parts.join(" ") || "normal" });
   };
+
+  const fx: TextEffect = el.effect ?? {
+    type: "none",
+    color: "#000000",
+    intensity: 50,
+  };
+  const selectEffect = (type: TextEffectType) => {
+    const color = el.effect?.color ?? (type === "glow" ? "#8b3dff" : "#000000");
+    onPatch(el.id, {
+      effect: { type, color, intensity: el.effect?.intensity ?? 50 },
+    });
+  };
+  const setEffect = (patch: Partial<TextEffect>) =>
+    onPatch(el.id, { effect: { ...fx, ...patch } });
+
   return (
     <div className="space-y-2">
       <textarea
@@ -619,6 +660,50 @@ function TextControls({
         >
           Italic
         </button>
+      </div>
+
+      <div className="pt-1">
+        <span className="text-muted-foreground text-[11px]">Effects</span>
+        <div className="mt-1 grid grid-cols-4 gap-1">
+          {(
+            [
+              { type: "none", label: "None" },
+              { type: "shadow", label: "Shadow" },
+              { type: "glow", label: "Glow" },
+              { type: "blur", label: "Blur" },
+            ] as const
+          ).map((e) => (
+            <button
+              key={e.type}
+              type="button"
+              onClick={() => selectEffect(e.type)}
+              className={cn(
+                "rounded-md border px-1 py-1 text-xs",
+                fx.type === e.type
+                  ? "border-primary text-primary bg-accent"
+                  : "border-input text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {e.label}
+            </button>
+          ))}
+        </div>
+        {(fx.type === "shadow" || fx.type === "glow") && (
+          <div className="mt-2">
+            <ColorPicker
+              label="Effect color"
+              value={fx.color}
+              onChange={(color) => setEffect({ color })}
+            />
+          </div>
+        )}
+        {fx.type !== "none" && (
+          <RangeField
+            label="Intensity"
+            value={fx.intensity}
+            onChange={(intensity) => setEffect({ intensity })}
+          />
+        )}
       </div>
     </div>
   );

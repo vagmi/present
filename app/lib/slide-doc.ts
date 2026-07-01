@@ -16,6 +16,14 @@ export interface BaseElement {
   rotation: number;
 }
 
+export type TextEffectType = "none" | "shadow" | "glow" | "blur";
+
+export interface TextEffect {
+  type: TextEffectType;
+  color: string;
+  intensity: number; // 0..100
+}
+
 export interface TextElement extends BaseElement {
   type: "text";
   text: string;
@@ -24,6 +32,42 @@ export interface TextElement extends BaseElement {
   fill: string;
   align: "left" | "center" | "right";
   fontStyle: string; // "normal" | "bold" | "italic" | "italic bold"
+  effect?: TextEffect;
+}
+
+/** Map an effect + its 0–100 intensity to concrete render values, shared by the
+ * Konva canvas and the DOM preview so they stay in sync. Returns null for
+ * no effect. Distances/blurs are in slide (960×540) pixels. */
+export type ResolvedEffect =
+  | { type: "shadow"; color: string; blur: number; offset: number; opacity: number }
+  | { type: "glow"; color: string; blur: number; offset: number; opacity: number }
+  | { type: "blur"; amount: number };
+
+export function resolveTextEffect(
+  effect: TextEffect | undefined,
+): ResolvedEffect | null {
+  if (!effect || effect.type === "none") return null;
+  const i = Math.max(0, Math.min(100, effect.intensity));
+  switch (effect.type) {
+    case "shadow":
+      return {
+        type: "shadow",
+        color: effect.color,
+        blur: i * 0.35,
+        offset: i * 0.12,
+        opacity: 0.55,
+      };
+    case "glow":
+      return {
+        type: "glow",
+        color: effect.color,
+        blur: Math.max(2, i * 0.55),
+        offset: 0,
+        opacity: 0.95,
+      };
+    case "blur":
+      return { type: "blur", amount: i * 0.12 };
+  }
 }
 
 export interface RectElement extends BaseElement {
