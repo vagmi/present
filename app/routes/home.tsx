@@ -7,7 +7,7 @@ import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Mudhal — an opinionated foundation for SaaS" },
+    { title: "Present — an opinionated foundation for SaaS" },
     {
       name: "description",
       content:
@@ -41,7 +41,7 @@ function HeaderNav() {
 function Wordmark() {
   return (
     <span className="font-heading text-xl font-semibold tracking-tight">
-      Mudhal<span className="text-stamp">*</span>
+      Present<span className="text-stamp">*</span>
     </span>
   );
 }
@@ -56,7 +56,7 @@ function SpecimenSheet() {
             <p className="form-label-mono text-muted-foreground">
               Acme Inc · pro plan
             </p>
-            <h3 className="mt-1 text-2xl">Items</h3>
+            <h3 className="mt-1 text-2xl">Presentations</h3>
           </div>
           <span
             className="stamp animate-stamp-in absolute -right-3 -top-3 bg-card"
@@ -67,7 +67,7 @@ function SpecimenSheet() {
         </div>
 
         <div className="mt-6 space-y-3">
-          {["Onboarding flow", "Billing webhook", "Invite teammates"].map(
+          {["Q3 Kickoff", "Product launch", "Investor update"].map(
             (name, i) => (
               <div
                 key={name}
@@ -81,7 +81,7 @@ function SpecimenSheet() {
             ),
           )}
           <div className="flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
-            New item →
+            New presentation →
           </div>
         </div>
 
@@ -131,7 +131,7 @@ function PricingCard({ plan }: { plan: PlanId }) {
       <p className="form-label-mono text-muted-foreground">{copy.name}</p>
       <p className="mt-2 font-heading text-3xl">{copy.price}</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        <li>{limits.maxItems.toLocaleString()} items</li>
+        <li>{limits.maxPresentations.toLocaleString()} presentations</li>
         <li>{limits.apiCallsPerMonth.toLocaleString()} API calls/month</li>
         <li className={limits.webhooks ? "" : "text-muted-foreground/60"}>
           {limits.webhooks ? "Webhooks included" : "No webhooks"}

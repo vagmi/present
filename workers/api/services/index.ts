@@ -1,10 +1,10 @@
 import { getDb } from "../db/client";
-import { createItemsRepo } from "../repositories/items-repo";
 import { createMembershipsRepo } from "../repositories/memberships-repo";
 import { createOrganizationsRepo } from "../repositories/organizations-repo";
+import { createPresentationsRepo } from "../repositories/presentations-repo";
 import { createUsageRepo } from "../repositories/usage-repo";
 import { createUsersRepo } from "../repositories/users-repo";
-import { createItemsService } from "./items-service";
+import { createPresentationsService } from "./presentations-service";
 import { createMembersService } from "./members-service";
 import { createOrganizationsService } from "./organizations-service";
 import { createUsersService } from "./users-service";
@@ -21,13 +21,13 @@ export function createServices(env: Env) {
   const usersRepo = createUsersRepo(db);
   const membershipsRepo = createMembershipsRepo(db);
   const usageRepo = createUsageRepo(db);
-  const itemsRepo = createItemsRepo(db);
+  const presentationsRepo = createPresentationsRepo(db);
 
   return {
     organizations: createOrganizationsService({ orgsRepo }),
     users: createUsersService({ usersRepo }),
     members: createMembersService({ membershipsRepo, usersRepo }),
-    items: createItemsService({ itemsRepo, usageRepo }),
+    presentations: createPresentationsService({ presentationsRepo, usageRepo }),
   };
 }
 

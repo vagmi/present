@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6cb4a87a-61af-4008-bcf0-284cc3b8e026",
+  "id": "b9be6db7-ca98-4aa5-a7b6-127a60acf0c5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "organizations": {
@@ -244,8 +244,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "items": {
-      "name": "items",
+    "presentations": {
+      "name": "presentations",
       "columns": {
         "id": {
           "name": "id",
@@ -261,18 +261,18 @@
           "notNull": true,
           "autoincrement": false
         },
-        "name": {
-          "name": "name",
+        "title": {
+          "name": "title",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "description": {
-          "name": "description",
+        "created_by": {
+          "name": "created_by",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "created_at": {
@@ -291,8 +291,8 @@
         }
       },
       "indexes": {
-        "items_org_id_idx": {
-          "name": "items_org_id_idx",
+        "presentations_org_id_idx": {
+          "name": "presentations_org_id_idx",
           "columns": [
             "org_id"
           ],
@@ -300,9 +300,9 @@
         }
       },
       "foreignKeys": {
-        "items_org_id_organizations_id_fk": {
-          "name": "items_org_id_organizations_id_fk",
-          "tableFrom": "items",
+        "presentations_org_id_organizations_id_fk": {
+          "name": "presentations_org_id_organizations_id_fk",
+          "tableFrom": "presentations",
           "tableTo": "organizations",
           "columnsFrom": [
             "org_id"

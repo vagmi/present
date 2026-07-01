@@ -1,11 +1,11 @@
 import { env } from "cloudflare:test";
 import { getDb, type Db } from "../../workers/api/db/client";
-import {
-  createItemsRepo,
-  type Item,
-} from "../../workers/api/repositories/items-repo";
 import { createMembershipsRepo } from "../../workers/api/repositories/memberships-repo";
 import { createOrganizationsRepo } from "../../workers/api/repositories/organizations-repo";
+import {
+  createPresentationsRepo,
+  type Presentation,
+} from "../../workers/api/repositories/presentations-repo";
 import { createUsersRepo } from "../../workers/api/repositories/users-repo";
 
 export function testDb(): Db {
@@ -33,14 +33,14 @@ export async function makeMembership(
   await createMembershipsRepo(db).upsert(orgId, userId, role);
 }
 
-export async function makeItem(
+export async function makePresentation(
   db: Db,
   orgId: string,
-  overrides: Partial<{ name: string; description: string | null }> = {},
-): Promise<Item> {
-  return createItemsRepo(db).create({
+  overrides: Partial<{ title: string; createdBy: string }> = {},
+): Promise<Presentation> {
+  return createPresentationsRepo(db).create({
     orgId,
-    name: overrides.name ?? "First Item",
-    description: overrides.description ?? "A sample item",
+    title: overrides.title ?? "First Deck",
+    createdBy: overrides.createdBy ?? "user_test_1",
   });
 }

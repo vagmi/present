@@ -1,7 +1,7 @@
 import { vi } from "vitest";
-import type { Item } from "../../workers/api/repositories/items-repo";
 import type { Membership } from "../../workers/api/repositories/memberships-repo";
 import type { Organization } from "../../workers/api/repositories/organizations-repo";
+import type { Presentation } from "../../workers/api/repositories/presentations-repo";
 import type { User } from "../../workers/api/repositories/users-repo";
 
 export function fakeOrg(overrides: Partial<Organization> = {}): Organization {
@@ -25,19 +25,21 @@ export function mockOrganizationsRepo() {
   };
 }
 
-export function fakeItem(overrides: Partial<Item> = {}): Item {
+export function fakePresentation(
+  overrides: Partial<Presentation> = {},
+): Presentation {
   return {
-    id: "item_1",
+    id: "pres_1",
     orgId: "org_test_1",
-    name: "First Item",
-    description: "A sample item",
+    title: "First Deck",
+    createdBy: "user_test_1",
     createdAt: 1_700_000_000,
     updatedAt: 1_700_000_000,
     ...overrides,
   };
 }
 
-export function mockItemsRepo() {
+export function mockPresentationsRepo() {
   return {
     create: vi.fn(),
     getById: vi.fn(),
@@ -48,7 +50,7 @@ export function mockItemsRepo() {
   };
 }
 
-export function mockItemsService() {
+export function mockPresentationsService() {
   return {
     list: vi.fn(),
     get: vi.fn(),

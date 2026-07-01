@@ -12,16 +12,15 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Textarea } from "~/components/ui/textarea";
 import { ApiError, apiFetch } from "~/lib/api-client.server";
 import { cn } from "~/lib/utils";
-import type { Item } from "../../../workers/api/repositories/items-repo";
 import type { Organization } from "../../../workers/api/repositories/organizations-repo";
+import type { Presentation } from "../../../workers/api/repositories/presentations-repo";
 import type { User } from "../../../workers/api/repositories/users-repo";
-import type { Route } from "./+types/items-list";
+import type { Route } from "./+types/presentations-list";
 
 export function meta() {
-  return [{ title: "Items — Mudhal" }];
+  return [{ title: "Presentations — Present" }];
 }
 
 // The dashboard talks to the Hono API in-process (apiFetch) — same code path
@@ -29,18 +28,18 @@ export function meta() {
 // the copy-me example for a CRUD resource: list (loader) + create/delete
 // (action), rendered with a dialog and per-row forms.
 export async function loader({ request }: Route.LoaderArgs) {
-  const [me, itemsRes] = await Promise.all([
+  const [me, presentationsRes] = await Promise.all([
     apiFetch<{ org: Organization; user: User; orgRole: string | null }>(
       request,
       "/api/me",
     ),
-    apiFetch<{ items: Item[] }>(request, "/api/items"),
+    apiFetch<{ presentations: Presentation[] }>(request, "/api/presentations"),
   ]);
   return {
     org: me.org,
     user: me.user,
     orgRole: me.orgRole,
-    items: itemsRes.items,
+    presentations: presentationsRes.presentations,
   };
 }
 
@@ -56,29 +55,29 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = String(form.get("intent") ?? "");
 
   if (intent === "delete") {
-    await apiFetch(request, `/api/items/${form.get("id")}`, {
+    await apiFetch(request, `/api/presentations/${form.get("id")}`, {
       method: "DELETE",
     });
     return { ok: true };
   }
 
   // create
-  const name = String(form.get("name") ?? "").trim();
-  const description = String(form.get("description") ?? "").trim();
-  if (!name) return { ok: false, error: "Give your item a name." };
+  const title = String(form.get("title") ?? "").trim();
+  if (!title) return { ok: false, error: "Give your presentation a title." };
 
   try {
-    await apiFetch(request, "/api/items", {
+    await apiFetch(request, "/api/presentations", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, description: description || undefined }),
+      body: JSON.stringify({ title }),
     });
     return { ok: true, created: true };
   } catch (e) {
     if (e instanceof ApiError && e.status === 402) {
       return {
         ok: false,
-        error: "You've hit your plan's item limit — upgrade to add more.",
+        error:
+          "You've hit your plan's presentation limit — upgrade to add more.",
       };
     }
     throw e;
@@ -90,7 +89,13 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
-function ItemCard({ item, index }: { item: Item; index: number }) {
+function PresentationCard({
+  presentation,
+  index,
+}: {
+  presentation: Presentation;
+  index: number;
+}) {
   const fetcher = useFetcher();
   const deleting = fetcher.state !== "idle";
   return (
@@ -102,11 +107,11 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
     >
       <div className="flex items-start justify-between gap-3">
         <p className="form-label-mono text-muted-foreground">
-          Item № {String(index + 1).padStart(3, "0")}
+          Deck № {String(index + 1).padStart(3, "0")}
         </p>
         <fetcher.Form method="post">
           <input type="hidden" name="intent" value="delete" />
-          <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="id" value={presentation.id} />
           <button
             type="submit"
             disabled={deleting}
@@ -116,21 +121,16 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
           </button>
         </fetcher.Form>
       </div>
-      <h2 className="mt-2 truncate text-xl">{item.name}</h2>
-      {item.description && (
-        <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-          {item.description}
-        </p>
-      )}
+      <h2 className="mt-2 truncate text-xl">{presentation.title}</h2>
       <div className="rule-perforated mt-4" />
       <p className="form-label-mono text-muted-foreground/70 mt-3 text-[10px]">
-        {dateFormat.format(new Date(item.updatedAt * 1000))}
+        {dateFormat.format(new Date(presentation.updatedAt * 1000))}
       </p>
     </div>
   );
 }
 
-function NewItemDialog() {
+function NewPresentationDialog() {
   const fetcher = useFetcher<typeof action>();
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -141,38 +141,29 @@ function NewItemDialog() {
     if (fetcher.state === "idle" && fetcher.data?.created) {
       setOpen(false);
       formRef.current?.reset();
-      toast.success("Item created");
+      toast.success("Presentation created");
     }
   }, [fetcher.state, fetcher.data]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)}>New item</Button>
+      <Button onClick={() => setOpen(true)}>New presentation</Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New item</DialogTitle>
+          <DialogTitle>New presentation</DialogTitle>
           <DialogDescription>
-            Items are scoped to your active organization.
+            Presentations are scoped to your active organization.
           </DialogDescription>
         </DialogHeader>
         <fetcher.Form method="post" ref={formRef} className="space-y-4">
           <div>
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="title">Title</Label>
             <Input
-              id="name"
-              name="name"
-              placeholder="Onboarding flow"
+              id="title"
+              name="title"
+              placeholder="Q3 Kickoff"
               autoFocus
               required
-              className="mt-1.5"
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="What is this item about?"
               className="mt-1.5"
             />
           </div>
@@ -181,7 +172,7 @@ function NewItemDialog() {
           )}
           <DialogFooter>
             <Button type="submit" disabled={busy}>
-              {busy ? "Creating…" : "Create item"}
+              {busy ? "Creating…" : "Create presentation"}
             </Button>
           </DialogFooter>
         </fetcher.Form>
@@ -190,8 +181,10 @@ function NewItemDialog() {
   );
 }
 
-export default function ItemsList({ loaderData }: Route.ComponentProps) {
-  const { org, user, orgRole, items } = loaderData;
+export default function PresentationsList({
+  loaderData,
+}: Route.ComponentProps) {
+  const { org, user, orgRole, presentations } = loaderData;
   const role = (orgRole ?? "org:member").replace(/^org:/, "");
   return (
     <div>
@@ -200,31 +193,35 @@ export default function ItemsList({ loaderData }: Route.ComponentProps) {
           <p className="form-label-mono text-muted-foreground">
             {org.name} · {org.plan} plan
           </p>
-          <h1 className="mt-2 text-3xl">Items</h1>
+          <h1 className="mt-2 text-3xl">Presentations</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Signed in as{" "}
             <span className="text-foreground">{displayName(user)}</span> ·{" "}
             <span className="font-mono text-xs">{role}</span> of {org.name}
           </p>
         </div>
-        <NewItemDialog />
+        <NewPresentationDialog />
       </div>
 
       <div className="rule-perforated mt-6" />
 
-      {items.length === 0 ? (
+      {presentations.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-4 text-center">
           <span className="stamp -rotate-3">Nothing here yet</span>
-          <h2 className="text-2xl">Your first item is one click away.</h2>
+          <h2 className="text-2xl">Your first deck is one click away.</h2>
           <p className="text-muted-foreground max-w-sm text-sm">
-            This list is the example resource. Rename it, copy it, and build
-            the thing your app is actually about.
+            Create a presentation, then add slides and design them on the
+            canvas.
           </p>
         </div>
       ) : (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item, i) => (
-            <ItemCard key={item.id} item={item} index={i} />
+          {presentations.map((presentation, i) => (
+            <PresentationCard
+              key={presentation.id}
+              presentation={presentation}
+              index={i}
+            />
           ))}
         </div>
       )}

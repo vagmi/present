@@ -16,7 +16,7 @@ export class ApiError extends Error {
  * header so Clerk session auth works.
  *
  * @param request the incoming RR request (for cookies)
- * @param path    full API path, e.g. "/api/items"
+ * @param path    full API path, e.g. "/api/presentations"
  */
 export async function apiFetch<T>(
   request: Request,

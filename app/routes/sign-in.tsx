@@ -2,7 +2,7 @@ import { SignIn } from "@clerk/react-router";
 import { Link } from "react-router";
 
 export function meta() {
-  return [{ title: "Sign in — Mudhal" }];
+  return [{ title: "Sign in — Present" }];
 }
 
 export default function SignInPage() {
@@ -12,7 +12,7 @@ export default function SignInPage() {
         to="/"
         className="font-heading text-xl font-semibold tracking-tight"
       >
-        Mudhal<span className="text-stamp">*</span>
+        Present<span className="text-stamp">*</span>
       </Link>
       <SignIn fallbackRedirectUrl="/app" signUpFallbackRedirectUrl="/app" />
     </div>

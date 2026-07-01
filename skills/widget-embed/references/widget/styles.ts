@@ -1,16 +1,16 @@
 /** Shadow-root CSS. Isolated from the host page; host pages can theme via
- * custom properties, e.g. `[data-mudhal] { --mudhal-accent: #0a6; }`. */
+ * custom properties, e.g. `[data-present] { --present-accent: #0a6; }`. */
 export const styles = /* css */ `
 :host {
   all: initial;
   display: block;
-  --st-bg: var(--mudhal-bg, #faf8f2);
-  --st-ink: var(--mudhal-ink, #2e2a23);
-  --st-muted: var(--mudhal-muted, #7d7468);
-  --st-border: var(--mudhal-border, #d9d2c3);
-  --st-accent: var(--mudhal-accent, #c2410c);
-  --st-radius: var(--mudhal-radius, 8px);
-  --st-font: var(--mudhal-font, ui-sans-serif, system-ui, sans-serif);
+  --st-bg: var(--present-bg, #faf8f2);
+  --st-ink: var(--present-ink, #2e2a23);
+  --st-muted: var(--present-muted, #7d7468);
+  --st-border: var(--present-border, #d9d2c3);
+  --st-accent: var(--present-accent, #c2410c);
+  --st-radius: var(--present-radius, 8px);
+  --st-font: var(--present-font, ui-sans-serif, system-ui, sans-serif);
   --st-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 .card {

@@ -28,7 +28,7 @@ For R2 binding details, also consult the bundled **cloudflare** skill.
   thing that reads it, so the bucket stays private.
 
 ```
-npx wrangler r2 bucket create mudhal-uploads
+npx wrangler r2 bucket create present-uploads
 ```
 
 ## Wiring
@@ -38,7 +38,7 @@ npx wrangler r2 bucket create mudhal-uploads
 Uncomment (or add) the R2 block, then regenerate types:
 
 ```jsonc
-"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "mudhal-uploads" }]
+"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "present-uploads" }]
 ```
 
 ```

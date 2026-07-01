@@ -22,13 +22,13 @@ function Wordmark() {
       to="/app"
       className="font-heading text-lg font-semibold tracking-tight"
     >
-      Mudhal<span className="text-stamp">*</span>
+      Present<span className="text-stamp">*</span>
     </Link>
   );
 }
 
 const NAV = [
-  { to: "/app", label: "Items", end: true },
+  { to: "/app", label: "Presentations", end: true },
   { to: "/app/members", label: "Members", end: false },
 ] as const;
 
