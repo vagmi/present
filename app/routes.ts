@@ -26,4 +26,7 @@ export default [
     "editor/:presentationId/:slideId",
     "routes/editor/slide-editor.tsx",
   ),
+
+  // Full-screen slideshow playback.
+  route("present/:presentationId", "routes/present/slideshow.tsx"),
 ] satisfies RouteConfig;

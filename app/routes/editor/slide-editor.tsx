@@ -1,5 +1,12 @@
 import { getAuth } from "@clerk/react-router/server";
-import { ArrowLeft, Image as ImageIcon, Plus, Square, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Image as ImageIcon,
+  Play,
+  Plus,
+  Square,
+  Trash2,
+} from "lucide-react";
 import {
   lazy,
   Suspense,
@@ -323,6 +330,11 @@ function Toolbar({
         <span className="text-muted-foreground w-16 text-right text-xs">
           {saveLabel}
         </span>
+        <Button asChild size="sm">
+          <Link to={`/present/${presentation.id}`}>
+            <Play /> Present
+          </Link>
+        </Button>
       </div>
     </header>
   );
