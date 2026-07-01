@@ -35,10 +35,11 @@ const NAV = [
 export default function AppLayout() {
   return (
     <div className="min-h-screen">
-      <header className="border-b bg-card/60">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-8 px-6">
+      <div className="bg-brand-gradient h-1" />
+      <header className="border-b bg-card">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
           <Wordmark />
-          <nav className="form-label-mono flex items-center gap-6">
+          <nav className="flex items-center gap-1 text-sm font-medium">
             {NAV.map((item) => (
               <NavLink
                 key={item.to}
@@ -46,8 +47,8 @@ export default function AppLayout() {
                 end={item.end}
                 className={({ isActive }) =>
                   isActive
-                    ? "text-stamp underline decoration-dashed underline-offset-8"
-                    : "text-muted-foreground transition-colors hover:text-foreground"
+                    ? "text-primary bg-accent rounded-full px-3 py-1.5"
+                    : "text-muted-foreground hover:text-foreground rounded-full px-3 py-1.5 transition-colors"
                 }
               >
                 {item.label}

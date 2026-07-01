@@ -27,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="paper-grain">
+      <body>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -36,19 +36,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Clerk components themed to the "Paper & Ink" design language.
+/** Clerk components themed to the "Studio" design language.
  * Restyle (or remove) freely — see app/app.css for the design tokens. */
 const clerkAppearance = {
   variables: {
-    colorPrimary: "oklch(0.2667 0.014 76)",
-    colorBackground: "oklch(0.9851 0.007 95)",
-    colorText: "oklch(0.2462 0.013 76)",
-    colorTextSecondary: "oklch(0.4961 0.016 80)",
-    colorInputBackground: "oklch(0.9851 0.007 95)",
-    colorInputText: "oklch(0.2462 0.013 76)",
-    colorDanger: "oklch(0.5471 0.205 28)",
-    fontFamily: '"Public Sans Variable", ui-sans-serif, system-ui, sans-serif',
-    borderRadius: "0.375rem",
+    colorPrimary: "oklch(0.5555 0.2472 299)",
+    colorBackground: "oklch(1 0 0)",
+    colorText: "oklch(0.2178 0.0166 264)",
+    colorTextSecondary: "oklch(0.5486 0.0214 264)",
+    colorInputBackground: "oklch(1 0 0)",
+    colorInputText: "oklch(0.2178 0.0166 264)",
+    colorDanger: "oklch(0.6221 0.2115 22)",
+    fontFamily: '"Inter Variable", ui-sans-serif, system-ui, sans-serif',
+    borderRadius: "0.75rem",
   },
 };
 

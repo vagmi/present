@@ -49,46 +49,49 @@ function Wordmark() {
 /** A static specimen of a dashboard — replace with a shot of your real app. */
 function SpecimenSheet() {
   return (
-    <div className="relative rotate-1 transition-transform duration-500 hover:rotate-0">
-      <div className="rounded-lg border bg-card p-8 shadow-[0_24px_48px_-24px_rgb(0_0_0/0.25)]">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="form-label-mono text-muted-foreground">
-              Acme Inc · pro plan
-            </p>
-            <h3 className="mt-1 text-2xl">Presentations</h3>
+    <div className="relative">
+      <div className="overflow-hidden rounded-2xl border bg-card shadow-[0_32px_64px_-32px_rgb(80_40_180/0.35)]">
+        <div className="bg-brand-gradient h-1.5" />
+        <div className="p-8">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="form-label-mono text-muted-foreground">
+                Acme Inc · pro plan
+              </p>
+              <h3 className="mt-1 text-2xl">Presentations</h3>
+            </div>
+            <span
+              className="stamp animate-stamp-in absolute -right-3 -top-3 bg-card"
+              style={{ animationDelay: "0.9s" }}
+            >
+              ✦ New
+            </span>
           </div>
-          <span
-            className="stamp animate-stamp-in absolute -right-3 -top-3 bg-card"
-            style={{ animationDelay: "0.9s" }}
-          >
-            Shipped
-          </span>
-        </div>
 
-        <div className="mt-6 space-y-3">
-          {["Q3 Kickoff", "Product launch", "Investor update"].map(
-            (name, i) => (
-              <div
-                key={name}
-                className="flex items-center justify-between rounded-md border border-input bg-background px-3 py-2.5 text-sm"
-              >
-                <span>{name}</span>
-                <span className="form-label-mono text-muted-foreground text-[10px]">
-                  № {String(i + 1).padStart(3, "0")}
-                </span>
-              </div>
-            ),
-          )}
-          <div className="flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
-            New presentation →
+          <div className="mt-6 space-y-3">
+            {["Q3 Kickoff", "Product launch", "Investor update"].map(
+              (name, i) => (
+                <div
+                  key={name}
+                  className="flex items-center justify-between rounded-xl border bg-background px-3 py-2.5 text-sm"
+                >
+                  <span>{name}</span>
+                  <span className="form-label-mono text-muted-foreground text-[10px]">
+                    № {String(i + 1).padStart(3, "0")}
+                  </span>
+                </div>
+              ),
+            )}
+            <div className="flex h-10 items-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground">
+              New presentation →
+            </div>
           </div>
-        </div>
 
-        <div className="rule-perforated mt-8" />
-        <p className="form-label-mono mt-3 text-muted-foreground/70">
-          Auth · Database · Plans — already wired
-        </p>
+          <div className="rule-perforated mt-8" />
+          <p className="form-label-mono mt-3 text-muted-foreground/70">
+            Design · Slides · Templates — one canvas
+          </p>
+        </div>
       </div>
     </div>
   );

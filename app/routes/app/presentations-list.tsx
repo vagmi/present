@@ -207,7 +207,7 @@ export default function PresentationsList({
 
       {presentations.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-4 text-center">
-          <span className="stamp -rotate-3">Nothing here yet</span>
+          <span className="stamp">Nothing here yet</span>
           <h2 className="text-2xl">Your first deck is one click away.</h2>
           <p className="text-muted-foreground max-w-sm text-sm">
             Create a presentation, then add slides and design them on the

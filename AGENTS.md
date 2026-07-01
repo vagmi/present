@@ -116,19 +116,24 @@ Every repository, service, and controller ships with a spec. `tests/` mirrors
 - **Controllers**: Hono `app.request()` with mocked services and stubbed auth.
   Assert status codes and validation failures.
 
-## Styling & UI — "Paper & Ink" (a starting point)
+## Styling & UI — "Studio" (Present's design language)
 
-The template ships an opinionated, polished design language. Tokens live in
-`app/app.css` — never hardcode colors. Restyle freely; it's just a starting
-point.
+An opinionated, Canva-inspired design language. Tokens live in `app/app.css` —
+never hardcode colors. Restyle freely; it's a starting point.
 
-- **Type**: Fraunces (`font-heading`, all h1–h4) · Public Sans (`font-sans`,
-  body) · IBM Plex Mono (`font-mono`, labels/data).
-- **Accent**: vermilion (`--stamp`; utilities `text-stamp`, `bg-stamp`), used
-  sparingly. Buttons stay ink (`--primary`).
-- **Motifs** (utilities in app.css): `form-label-mono` (mono eyebrow),
-  `rule-perforated` (dashed divider), `stamp` (rubber-stamp badge),
-  `animate-fade-up`, `animate-stamp-in`.
+- **Type**: Plus Jakarta Sans (`font-heading`, all h1–h4) · Inter (`font-sans`,
+  body & UI) · IBM Plex Mono (`font-mono`, data).
+- **Brand accent**: electric violet (`--primary`, and `--stamp` for the same hue
+  via `text-stamp`/`bg-stamp`/`border-stamp`). A cyan→violet **brand gradient**
+  (`bg-brand-gradient`, stops `--brand-from`/`--brand-to`) is reserved for the
+  top rail and small flourishes — use it sparingly.
+- **Surfaces**: crisp white cards (`--card`) on a cool-gray workspace
+  (`--background`); generous rounding (`--radius: 0.75rem`); buttons are
+  pill-shaped (`rounded-full`).
+- **Utilities** (in app.css, kept under legacy names for compatibility):
+  `form-label-mono` (uppercase sans micro-label), `rule-perforated` (hairline
+  divider), `stamp` (soft brand pill badge), `bg-brand-gradient`,
+  `animate-fade-up`, `animate-stamp-in` (gentle pop-in).
 - Tailwind v4: theme via `@theme`/CSS variables in `app/app.css` — there is no
   `tailwind.config.*`, don't create one.
 - shadcn/ui components in `app/components/ui/` (alias `~/components/ui`); add
