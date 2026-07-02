@@ -22,7 +22,7 @@
 			"database_id": "e3c26274-71c7-4331-b811-37b456fd1292",
 			"migrations_dir": "drizzle/migrations"
 		}
-	]
+	],
 	/**
 	 * Static Assets — uncomment when you install the `widget-embed` skill so
 	 * that /widget.js (built into ./public) is served by the Worker.
@@ -34,5 +34,10 @@
 	 * Create it first: npx wrangler r2 bucket create present-uploads
 	 * https://developers.cloudflare.com/r2/
 	 */
-	// "r2_buckets": [ { "binding": "UPLOADS", "bucket_name": "present-uploads" } ]
+	"r2_buckets": [
+		{
+			"binding": "UPLOADS",
+			"bucket_name": "present-uploads"
+		}
+	]
 }

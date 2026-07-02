@@ -16,16 +16,19 @@ import {
   useState,
 } from "react";
 import { Link, redirect, useNavigate } from "react-router";
+import { toast } from "sonner";
 import { ClientOnly } from "~/components/editor/client-only";
 import { ColorPicker } from "~/components/editor/color-picker";
 import { FontPicker } from "~/components/editor/font-picker";
 import { SlidePreview } from "~/components/editor/slide-preview";
 import { TextPresetMenu } from "~/components/editor/text-preset-menu";
+import { Toaster } from "~/components/ui/sonner";
 import { Button } from "~/components/ui/button";
 import { apiFetch } from "~/lib/api-client.server";
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from "~/lib/scene";
 import {
   addElement,
+  type ImageElement,
   newImage,
   newRect,
   normalizeDoc,
@@ -129,6 +132,36 @@ function useAutosave(pid: string, sid: string, doc: SlideDoc): SaveState {
   return state;
 }
 
+// ---- image upload ---------------------------------------------------------
+
+function imageSize(src: string): Promise<{ w: number; h: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+/** Build an image element sized to the file's aspect ratio, fit within the
+ * slide and centered. */
+function fittedImage(
+  src: string,
+  dims: { w: number; h: number } | null,
+): ImageElement {
+  const el = newImage(src);
+  if (dims && dims.w > 0 && dims.h > 0) {
+    const ratio = Math.min(640 / dims.w, 420 / dims.h, 1);
+    const w = Math.max(24, Math.round(dims.w * ratio));
+    const h = Math.max(24, Math.round(dims.h * ratio));
+    el.width = w;
+    el.height = h;
+    el.x = Math.round((SLIDE_WIDTH - w) / 2);
+    el.y = Math.round((SLIDE_HEIGHT - h) / 2);
+  }
+  return el;
+}
+
 // ---- fit-to-container -----------------------------------------------------
 
 function useElementSize<T extends HTMLElement>() {
@@ -197,18 +230,50 @@ function Editor({
     navigate(`/editor/${presentation.id}/${created.id}`);
   }
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    const id = toast.loading("Uploading image…");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads", {
+        method: "POST",
+        body: fd,
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        toast.error("Upload failed", { id });
+        return;
+      }
+      const { key } = (await res.json()) as { key: string };
+      const src = `/api/uploads/${key}`;
+      const dims = await imageSize(src).catch(() => null);
+      addAndSelect(fittedImage(src, dims));
+      toast.success("Image added", { id });
+    } catch {
+      toast.error("Upload failed", { id });
+    }
+  }
+
   return (
     <div className="bg-background flex h-screen flex-col overflow-hidden">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={handleImageFile}
+      />
       <Toolbar
         presentation={presentation}
         saveState={saveState}
         hasSelection={!!selected}
         onAddText={addAndSelect}
         onAddRect={() => addAndSelect(newRect())}
-        onAddImage={() => {
-          const url = window.prompt("Image URL");
-          if (url) addAndSelect(newImage(url.trim()));
-        }}
+        onAddImage={() => fileInputRef.current?.click()}
         onDelete={() => {
           if (selectedId) {
             mutate(removeElement(doc, selectedId));
@@ -267,6 +332,7 @@ function Editor({
           }}
         />
       </div>
+      <Toaster position="bottom-center" />
     </div>
   );
 }

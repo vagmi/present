@@ -7,6 +7,7 @@ import { createUsageRepo } from "../repositories/usage-repo";
 import { createUsersRepo } from "../repositories/users-repo";
 import { createPresentationsService } from "./presentations-service";
 import { createSlidesService } from "./slides-service";
+import { createUploadsService } from "./uploads-service";
 import { createMembersService } from "./members-service";
 import { createOrganizationsService } from "./organizations-service";
 import { createUsersService } from "./users-service";
@@ -32,6 +33,7 @@ export function createServices(env: Env) {
     members: createMembersService({ membershipsRepo, usersRepo }),
     presentations: createPresentationsService({ presentationsRepo, usageRepo }),
     slides: createSlidesService({ slidesRepo, presentationsRepo }),
+    uploads: createUploadsService({ bucket: env.UPLOADS }),
   };
 }
 

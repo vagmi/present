@@ -5,6 +5,7 @@ import { createIntegrationsController } from "./controllers/integrations-control
 import { createMembersController } from "./controllers/members-controller";
 import { createPresentationsController } from "./controllers/presentations-controller";
 import { createSlidesController } from "./controllers/slides-controller";
+import { createUploadsController } from "./controllers/uploads-controller";
 import { requireOrg } from "./middleware/auth";
 import { injectServices } from "./middleware/services";
 import type { ApiEnv } from "./types";
@@ -53,6 +54,7 @@ export function createApi() {
     createSlidesController(),
   );
   authed.route("/members", createMembersController());
+  authed.route("/uploads", createUploadsController());
 
   app.route("/", authed);
 

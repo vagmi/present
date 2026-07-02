@@ -147,29 +147,29 @@ template picker in the "new presentation" UI.
 **Done when:** create a deck from a template → it opens with the template's
 slides ready to edit; blank still works; `pnpm test` green; deploys.
 
-### [ ] Phase 5 — Image uploads (r2-uploads) + embed into slides
+### [x] Phase 5 — Image uploads (r2-uploads) + embed into slides
 
-**Goal:** a user can upload their own images and place them onto a slide. Both
-uploads and AI generation (Phase 6) feed the same mechanic: an image URL becomes
-a Konva `Image` node in the slide's `scene` JSON.
+**Goal:** a user can upload their own images and place them onto a slide. An
+uploaded image becomes an `image` element (`src`) in the slide's `scene` JSON,
+rendered on the Konva canvas and DOM preview.
 
-**Slice:** `r2-uploads` skill (R2 bucket + presigned/direct upload) → `assets`
-schema → `assets-repo` → `assets-service` → controller → editor "Upload image"
-panel.
+**What shipped** (the `r2-uploads` skill is **private-bucket**, so no assets
+table or public URL was needed — the image `src` is the authed endpoint):
+- `r2_buckets` binding (`UPLOADS` → `present-uploads`) uncommented in
+  `wrangler.jsonc`; `pnpm cf-typegen` typed `env.UPLOADS`. Bucket is **private**.
+- `uploads-service` (org-prefixed unguessable keys, 5 MB / image-type limits) +
+  `uploads-controller` at `/api/uploads` (POST multipart, GET/DELETE `:key`,
+  every read re-checks the key's org prefix). Copied from the skill references.
+- Editor: the **Image** toolbar button opens a file picker → POSTs to
+  `/api/uploads` → drops an image element sized to the file's aspect ratio.
+  Image `src` is `/api/uploads/<key>` (same-origin, cookie-authed) — the Konva
+  loader and previews fetch it directly.
+- Tests: `uploads-service` with a fake bucket (type/size limits, org-scoped
+  keys).
 
-**Build:**
-- `pnpm install-skill r2-uploads`; follow its `SKILL.md` — uncomment the
-  `r2_buckets` binding in `wrangler.jsonc` (`present-uploads`), create the bucket
-  (`npx wrangler r2 bucket create present-uploads`), add `R2_PUBLIC_BASE_URL` to
-  `.dev.vars` **and** `workers/env.d.ts`, then `pnpm cf-typegen`.
-- `assets` schema — `orgId`, `createdBy`, `key` (R2 object key), `url`,
-  `contentType`, `bytes`, timestamps. Scoped by `org_id`.
-- `assets-service` — validates content-type/size, stores to R2 via the skill's
-  adapter, records the row. Optionally gate count/bytes on the plan.
-- Controller: upload endpoint (zod-validate metadata at the edge).
-- Editor UI: an "Upload image" control that adds the returned URL as a Konva
-  image node and saves the scene (reuses the Phase 3 save path).
-- Tests: service with a mocked R2 adapter; controller with mocked service.
+**Deploy note (Phase 8):** create the remote bucket
+(`npx wrangler r2 bucket create present-uploads`) — local dev uses miniflare's
+built-in R2, so no bucket creation is needed to develop.
 
 **Done when:** upload an image → it appears in the asset panel → drop it on a
 slide → it persists in the scene; `pnpm test` green; deploys.
@@ -229,6 +229,7 @@ effect; `pnpm test` green; deploys.
   `CLERK_PUBLISHABLE_KEY`, `FAL_KEY`, and any skill keys (`POLAR_*`).
 - If not already done for the `present` worker:
   `npx wrangler d1 create present` and set `database_id` in `wrangler.jsonc`.
+- `npx wrangler r2 bucket create present-uploads` (private — no public access).
 - `npx wrangler d1 migrations apply present --remote`.
 - `pnpm deploy`.
 - Set production Clerk webhook URL to
