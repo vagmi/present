@@ -1,4 +1,6 @@
+import { newId } from "~/lib/id";
 import { emptyScene, type SlideScene } from "~/lib/scene";
+import type { SlideDoc } from "~/lib/slide-doc";
 import type { PresentationsRepo } from "../repositories/presentations-repo";
 import type { Slide, SlidesRepo } from "../repositories/slides-repo";
 import { NotFoundError, ValidationError } from "./errors";
@@ -92,6 +94,38 @@ export function createSlidesService({
         orderedIds.map((id, i) => slidesRepo.updatePosition(orgId, id, i)),
       );
       return slidesRepo.listByPresentation(orgId, presentationId);
+    },
+
+    /** Duplicate a slide, inserting it after the source and shifting
+     * subsequent slides down one position. The cloned scene gets fresh element
+     * ids so there are no collisions across slides. */
+    async duplicate(orgId: string, id: string): Promise<Slide> {
+      const source = await slidesRepo.getById(orgId, id);
+      if (!source) throw new NotFoundError(`slide ${id} not found`);
+      await assertPresentation(orgId, source.presentationId);
+
+      // Clone the scene with fresh element ULIDs.
+      const doc = source.scene as unknown as SlideDoc;
+      const clonedScene: SlideScene = {
+        ...doc,
+        elements: (doc.elements ?? []).map((el) => ({
+          ...el,
+          id: newId(),
+        })),
+      };
+
+      const created = await slidesRepo.create({
+        orgId,
+        presentationId: source.presentationId,
+        position: source.position + 1,
+        scene: clonedScene,
+      });
+      await slidesRepo.shiftPositionsAfter(
+        orgId,
+        source.presentationId,
+        source.position,
+      );
+      return created;
     },
 
     async delete(orgId: string, id: string): Promise<void> {

@@ -90,4 +90,54 @@ describe("slides repo", () => {
     expect(await repo.delete("org_a", slide.id)).toBe(true);
     expect(await repo.getById("org_a", slide.id)).toBeNull();
   });
+
+  describe("shiftPositionsAfter", () => {
+    it("increments positions for slides after the given threshold", async () => {
+      const { db, orgId, presentationId } = await seedDeck();
+      const repo = createSlidesRepo(db);
+      // Positions: 0, 1, 2
+      const s0 = await makeSlide(db, orgId, presentationId, 0);
+      const s1 = await makeSlide(db, orgId, presentationId, 1);
+      const s2 = await makeSlide(db, orgId, presentationId, 2);
+
+      await repo.shiftPositionsAfter(orgId, presentationId, 0);
+
+      const list = await repo.listByPresentation(orgId, presentationId);
+      expect(list.map((s) => s.id)).toEqual([s0.id, s1.id, s2.id]);
+      expect(list.map((s) => s.position)).toEqual([0, 2, 3]);
+    });
+
+    it("does not affect slides at or before the threshold", async () => {
+      const { db, orgId, presentationId } = await seedDeck();
+      const repo = createSlidesRepo(db);
+      // Positions: 0, 1, 2
+      await makeSlide(db, orgId, presentationId, 0);
+      await makeSlide(db, orgId, presentationId, 1);
+      await makeSlide(db, orgId, presentationId, 2);
+
+      await repo.shiftPositionsAfter(orgId, presentationId, 2);
+
+      const list = await repo.listByPresentation(orgId, presentationId);
+      expect(list.map((s) => s.position)).toEqual([0, 1, 2]);
+    });
+
+    it("is scoped by org and presentation", async () => {
+      const db = testDb();
+      const a = await seedDeck(db, "org_a");
+      const b = await seedDeck(db, "org_b");
+      const repo = createSlidesRepo(db);
+      await makeSlide(db, "org_a", a.presentationId, 0);
+      await makeSlide(db, "org_a", a.presentationId, 1);
+      await makeSlide(db, "org_b", b.presentationId, 0);
+
+      await repo.shiftPositionsAfter("org_a", a.presentationId, 0);
+
+      // Org A's second slide shifted
+      const listA = await repo.listByPresentation("org_a", a.presentationId);
+      expect(listA.map((s) => s.position)).toEqual([0, 2]);
+      // Org B unaffected
+      const listB = await repo.listByPresentation("org_b", b.presentationId);
+      expect(listB.map((s) => s.position)).toEqual([0]);
+    });
+  });
 });

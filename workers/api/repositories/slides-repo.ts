@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { newId } from "~/lib/id";
 import type { SlideScene } from "~/lib/scene";
 import type { Db } from "../db/client";
@@ -97,6 +97,29 @@ export function createSlidesRepo(db: Db) {
         .update(slides)
         .set({ position, updatedAt: now() })
         .where(and(eq(slides.orgId, orgId), eq(slides.id, id)));
+    },
+
+    /** Increment position by 1 for every slide after `afterPosition` (exclusive),
+     * scoped to a single presentation. Used to make room when inserting a
+     * duplicated slide after the source. */
+    async shiftPositionsAfter(
+      orgId: string,
+      presentationId: string,
+      afterPosition: number,
+    ): Promise<void> {
+      await db
+        .update(slides)
+        .set({
+          position: sql`${slides.position} + 1`,
+          updatedAt: now(),
+        })
+        .where(
+          and(
+            eq(slides.orgId, orgId),
+            eq(slides.presentationId, presentationId),
+            gt(slides.position, afterPosition),
+          ),
+        );
     },
 
     async delete(orgId: string, id: string): Promise<boolean> {

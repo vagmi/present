@@ -41,6 +41,14 @@ export function createSlidesController() {
     return c.json({ slides });
   });
 
+  app.post("/:slideId/duplicate", async (c) => {
+    const slide = await c.var.services.slides.duplicate(
+      c.var.orgId,
+      c.req.param("slideId"),
+    );
+    return c.json({ slide }, 201);
+  });
+
   app.get("/:slideId", async (c) => {
     const slide = await c.var.services.slides.get(
       c.var.orgId,

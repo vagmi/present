@@ -3,28 +3,12 @@
 // reachable: every read re-checks the caller's org against the key prefix.
 // Copy to: workers/api/controllers/uploads-controller.ts
 import { Hono } from "hono";
-import { ValidationError } from "../services/errors";
 import type { ApiEnv } from "../types";
 
+/** /api/uploads — serves and deletes private objects by key. Uploads happen on
+ * the presentation-scoped route (see presentation-uploads-controller). */
 export function createUploadsController() {
   const app = new Hono<ApiEnv>();
-
-  app.post("/", async (c) => {
-    const form = await c.req.formData();
-    const file = form.get("file");
-    if (!(file instanceof File)) {
-      throw new ValidationError("expected a 'file' field");
-    }
-
-    const { key } = await c.var.services.uploads.put(c.var.orgId, {
-      filename: file.name,
-      contentType: file.type,
-      size: file.size,
-      body: file.stream(),
-    });
-
-    return c.json({ key }, 201);
-  });
 
   // Stream a private object back to the authed caller. The service enforces
   // that `key` belongs to this org before R2 is ever touched.

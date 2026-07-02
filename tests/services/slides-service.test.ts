@@ -95,4 +95,78 @@ describe("slides service", () => {
       NotFoundError,
     );
   });
+
+  describe("duplicate", () => {
+    it("throws NotFoundError when source slide is missing", async () => {
+      const { service, slidesRepo } = makeService();
+      slidesRepo.getById.mockResolvedValue(null);
+      await expect(service.duplicate(ORG, "nope")).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+    });
+
+    it("throws NotFoundError when parent presentation does not belong to org", async () => {
+      const { service, slidesRepo, presentationsRepo } = makeService();
+      slidesRepo.getById.mockResolvedValue(
+        fakeSlide({ presentationId: "pres_orphan" }),
+      );
+      presentationsRepo.getById.mockResolvedValue(null);
+      await expect(service.duplicate(ORG, "slide_1")).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+    });
+
+    it("creates a new slide after the source with cloned scene", async () => {
+      const { service, slidesRepo } = makeService();
+      const source = fakeSlide({ position: 1, scene: { foo: "bar" } });
+      const created = fakeSlide({ id: "slide_new", position: 2 });
+      slidesRepo.getById.mockResolvedValue(source);
+      slidesRepo.create.mockResolvedValue(created);
+
+      const result = await service.duplicate(ORG, "slide_1");
+
+      expect(result.id).toBe("slide_new");
+      expect(slidesRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orgId: ORG,
+          presentationId: source.presentationId,
+          position: 2,
+        }),
+      );
+      expect(slidesRepo.shiftPositionsAfter).toHaveBeenCalledWith(
+        ORG,
+        source.presentationId,
+        1,
+      );
+    });
+
+    it("clones the scene with fresh element ids", async () => {
+      const { service, slidesRepo } = makeService();
+      const source = fakeSlide({
+        scene: {
+          version: 1,
+          background: "#fff",
+          elements: [
+            { id: "old_1", type: "text", x: 10, y: 20, text: "hello" },
+            { id: "old_2", type: "rect", x: 30, y: 40, fill: "#000" },
+          ],
+        },
+      });
+      slidesRepo.getById.mockResolvedValue(source);
+      const created = fakeSlide({ id: "slide_new" });
+      slidesRepo.create.mockResolvedValue(created);
+
+      await service.duplicate(ORG, "slide_1");
+
+      const call = slidesRepo.create.mock.calls[0][0];
+      const { elements } = call.scene as { elements: { id: string }[] };
+      expect(elements.length).toBe(2);
+      // Element ids are regenerated, not the same as the source.
+      expect(elements[0].id).not.toBe("old_1");
+      expect(elements[1].id).not.toBe("old_2");
+      // But other properties are preserved.
+      const { id: _id, ...rest } = elements[0] as { id: string };
+      expect(rest).toMatchObject({ type: "text", x: 10, y: 20, text: "hello" });
+    });
+  });
 });

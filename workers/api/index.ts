@@ -4,6 +4,7 @@ import { domainErrorHandler } from "./controllers/error-handler";
 import { createIntegrationsController } from "./controllers/integrations-controller";
 import { createMembersController } from "./controllers/members-controller";
 import { createPresentationsController } from "./controllers/presentations-controller";
+import { createPresentationUploadsController } from "./controllers/presentation-uploads-controller";
 import { createSlidesController } from "./controllers/slides-controller";
 import { createUploadsController } from "./controllers/uploads-controller";
 import { requireOrg } from "./middleware/auth";
@@ -52,6 +53,10 @@ export function createApi() {
   authed.route(
     "/presentations/:presentationId/slides",
     createSlidesController(),
+  );
+  authed.route(
+    "/presentations/:presentationId/uploads",
+    createPresentationUploadsController(),
   );
   authed.route("/members", createMembersController());
   authed.route("/uploads", createUploadsController());

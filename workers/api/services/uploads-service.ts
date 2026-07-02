@@ -29,7 +29,11 @@ export interface UploadsServiceDeps {
 
 export function createUploadsService({ bucket }: UploadsServiceDeps) {
   return {
-    async put(orgId: string, file: UploadInput): Promise<{ key: string }> {
+    async put(
+      orgId: string,
+      presentationId: string,
+      file: UploadInput,
+    ): Promise<{ key: string }> {
       if (!ALLOWED_TYPES.has(file.contentType)) {
         throw new ValidationError(`unsupported file type: ${file.contentType}`);
       }
@@ -38,8 +42,10 @@ export function createUploadsService({ bucket }: UploadsServiceDeps) {
       }
 
       const ext = extFromName(file.filename);
-      // org-scoped, unguessable key — the client name is only used for the ext.
-      const key = `${orgId}/${newId()}${ext}`;
+      // Scoped by org AND presentation, unguessable — the client name is only
+      // used for the extension. The presentation segment lets us list a deck's
+      // own uploads (see `list`) without a database table.
+      const key = `${orgId}/${presentationId}/${newId()}${ext}`;
 
       await bucket.put(key, file.body, {
         httpMetadata: { contentType: file.contentType },
@@ -48,6 +54,23 @@ export function createUploadsService({ bucket }: UploadsServiceDeps) {
       // No public URL — the bucket is private. Callers reference the key and
       // fetch bytes through the authed `/api/uploads/:key` endpoint.
       return { key };
+    },
+
+    /** List the objects uploaded within a presentation (by key prefix). The
+     * prefix begins with the caller's org id, so this can never surface another
+     * org's objects. Newest first. */
+    async list(
+      orgId: string,
+      presentationId: string,
+    ): Promise<{ key: string }[]> {
+      const listed = await bucket.list({
+        prefix: `${orgId}/${presentationId}/`,
+        limit: 1000,
+      });
+      // Keys embed a ULID (time-sortable); reverse for newest-first.
+      return listed.objects
+        .map((o) => ({ key: o.key }))
+        .sort((a, b) => (a.key < b.key ? 1 : -1));
     },
 
     async get(orgId: string, key: string): Promise<R2ObjectBody | null> {

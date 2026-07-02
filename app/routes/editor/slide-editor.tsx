@@ -1,12 +1,5 @@
 import { getAuth } from "@clerk/react-router/server";
-import {
-  ArrowLeft,
-  Image as ImageIcon,
-  Play,
-  Plus,
-  Square,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Copy, Play, Plus, Square, Trash2 } from "lucide-react";
 import {
   lazy,
   Suspense,
@@ -20,11 +13,13 @@ import { toast } from "sonner";
 import { ClientOnly } from "~/components/editor/client-only";
 import { ColorPicker } from "~/components/editor/color-picker";
 import { FontPicker } from "~/components/editor/font-picker";
+import { ImageUploadMenu } from "~/components/editor/image-upload-menu";
 import { SlidePreview } from "~/components/editor/slide-preview";
 import { TextPresetMenu } from "~/components/editor/text-preset-menu";
 import { Toaster } from "~/components/ui/sonner";
 import { Button } from "~/components/ui/button";
 import { apiFetch } from "~/lib/api-client.server";
+import { hasElement, readElement, writeElement } from "~/lib/element-clipboard";
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from "~/lib/scene";
 import {
   addElement,
@@ -230,6 +225,22 @@ function Editor({
     navigate(`/editor/${presentation.id}/${created.id}`);
   }
 
+  async function duplicateSlide(slideId = slide.id) {
+    const res = await fetch(
+      `/api/presentations/${presentation.id}/slides/${slideId}/duplicate`,
+      { method: "POST", credentials: "same-origin" },
+    );
+    if (!res.ok) return;
+    const { slide: created } = (await res.json()) as { slide: Slide };
+    navigate(`/editor/${presentation.id}/${created.id}`);
+  }
+
+  async function addImageFromSrc(src: string) {
+    const dims = await imageSize(src).catch(() => null);
+    addAndSelect(fittedImage(src, dims));
+  }
+
+  const [uploadsVersion, setUploadsVersion] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -239,24 +250,68 @@ function Editor({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/uploads", {
-        method: "POST",
-        body: fd,
-        credentials: "same-origin",
-      });
+      const res = await fetch(
+        `/api/presentations/${presentation.id}/uploads`,
+        { method: "POST", body: fd, credentials: "same-origin" },
+      );
       if (!res.ok) {
         toast.error("Upload failed", { id });
         return;
       }
       const { key } = (await res.json()) as { key: string };
-      const src = `/api/uploads/${key}`;
-      const dims = await imageSize(src).catch(() => null);
-      addAndSelect(fittedImage(src, dims));
+      await addImageFromSrc(`/api/uploads/${key}`);
+      setUploadsVersion((v) => v + 1); // refresh the Uploads panel
       toast.success("Image added", { id });
     } catch {
       toast.error("Upload failed", { id });
     }
   }
+
+  // Keyboard shortcuts for element copy/paste/cut. Only intercept when the
+  // focus is not inside a text input, textarea, or contentEditable element so
+  // normal typing shortcuts aren't broken.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (e.key === "c" || e.key === "C") {
+        if (isInput) return;
+        if (selected) {
+          e.preventDefault();
+          writeElement(selected);
+        }
+      } else if (e.key === "x" || e.key === "X") {
+        if (isInput) return;
+        if (selectedId && selected) {
+          e.preventDefault();
+          writeElement(selected);
+          mutate(removeElement(doc, selectedId));
+          setSelectedId(null);
+        }
+      } else if (e.key === "v" || e.key === "V") {
+        if (isInput) return;
+        if (hasElement()) {
+          e.preventDefault();
+          const el = readElement();
+          if (el) addAndSelect(el);
+        }
+      } else if (e.key === "d" || e.key === "D") {
+        if (isInput) return;
+        e.preventDefault();
+        duplicateSlide();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selected, selectedId, doc]);
 
   return (
     <div className="bg-background flex h-screen flex-col overflow-hidden">
@@ -271,9 +326,11 @@ function Editor({
         presentation={presentation}
         saveState={saveState}
         hasSelection={!!selected}
+        uploadsVersion={uploadsVersion}
         onAddText={addAndSelect}
         onAddRect={() => addAndSelect(newRect())}
-        onAddImage={() => fileInputRef.current?.click()}
+        onUploadImage={() => fileInputRef.current?.click()}
+        onPickImage={addImageFromSrc}
         onDelete={() => {
           if (selectedId) {
             mutate(removeElement(doc, selectedId));
@@ -288,6 +345,7 @@ function Editor({
           currentId={slide.id}
           presentationId={presentation.id}
           onAdd={addSlide}
+          onDuplicate={duplicateSlide}
         />
 
         <main
@@ -343,17 +401,21 @@ function Toolbar({
   presentation,
   saveState,
   hasSelection,
+  uploadsVersion,
   onAddText,
   onAddRect,
-  onAddImage,
+  onUploadImage,
+  onPickImage,
   onDelete,
 }: {
   presentation: Presentation;
   saveState: SaveState;
   hasSelection: boolean;
+  uploadsVersion: number;
   onAddText: (el: TextElement) => void;
   onAddRect: () => void;
-  onAddImage: () => void;
+  onUploadImage: () => void;
+  onPickImage: (src: string) => void;
   onDelete: () => void;
 }) {
   const saveLabel =
@@ -378,9 +440,12 @@ function Toolbar({
         <ToolButton label="Shape" onClick={onAddRect}>
           <Square />
         </ToolButton>
-        <ToolButton label="Image" onClick={onAddImage}>
-          <ImageIcon />
-        </ToolButton>
+        <ImageUploadMenu
+          presentationId={presentation.id}
+          reloadKey={uploadsVersion}
+          onUpload={onUploadImage}
+          onPick={onPickImage}
+        />
       </div>
 
       {hasSelection && (
@@ -435,33 +500,52 @@ function Filmstrip({
   currentId,
   presentationId,
   onAdd,
+  onDuplicate,
 }: {
   slides: Slide[];
   currentId: string;
   presentationId: string;
   onAdd: () => void;
+  onDuplicate: (slideId: string) => void;
 }) {
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; slideId: string } | null>(null);
+
+  // Dismiss the context menu on any click outside.
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const dismiss = () => setCtxMenu(null);
+    window.addEventListener("click", dismiss);
+    return () => window.removeEventListener("click", dismiss);
+  }, [ctxMenu]);
+
   return (
     <aside className="bg-card w-44 shrink-0 space-y-2 overflow-y-auto border-r p-2">
       {slides.map((s, i) => (
-        <Link
+        <div
           key={s.id}
-          to={`/editor/${presentationId}/${s.id}`}
-          className="flex items-start gap-2"
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setCtxMenu({ x: e.clientX, y: e.clientY, slideId: s.id });
+          }}
         >
-          <span className="text-muted-foreground w-4 pt-1 text-center text-xs font-semibold">
-            {i + 1}
-          </span>
-          <SlidePreview
-            scene={s.scene}
-            className={cn(
-              "flex-1 rounded-md border-2 bg-white transition-colors",
-              s.id === currentId
-                ? "border-primary"
-                : "border-transparent hover:border-border",
-            )}
-          />
-        </Link>
+          <Link
+            to={`/editor/${presentationId}/${s.id}`}
+            className="flex items-start gap-2"
+          >
+            <span className="text-muted-foreground w-4 pt-1 text-center text-xs font-semibold">
+              {i + 1}
+            </span>
+            <SlidePreview
+              scene={s.scene}
+              className={cn(
+                "flex-1 rounded-md border-2 bg-white transition-colors",
+                s.id === currentId
+                  ? "border-primary"
+                  : "border-transparent hover:border-border",
+              )}
+            />
+          </Link>
+        </div>
       ))}
       <button
         type="button"
@@ -470,6 +554,25 @@ function Filmstrip({
       >
         <Plus className="size-5" />
       </button>
+
+      {ctxMenu && (
+        <div
+          className="bg-popover text-popover-foreground fixed z-50 min-w-[140px] rounded-lg border p-1 shadow-md"
+          style={{ left: ctxMenu.x, top: ctxMenu.y }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              onDuplicate(ctxMenu.slideId);
+              setCtxMenu(null);
+            }}
+            className="hover:bg-accent flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm"
+          >
+            <Copy className="mr-2 size-4" />
+            Duplicate Slide
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

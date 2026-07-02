@@ -83,6 +83,7 @@ export function mockSlidesRepo() {
     countByPresentation: vi.fn(),
     updateScene: vi.fn(),
     updatePosition: vi.fn(),
+    shiftPositionsAfter: vi.fn(),
     delete: vi.fn(),
   };
 }
@@ -94,6 +95,7 @@ export function mockSlidesService() {
     add: vi.fn(),
     updateScene: vi.fn(),
     reorder: vi.fn(),
+    duplicate: vi.fn(),
     delete: vi.fn(),
   };
 }

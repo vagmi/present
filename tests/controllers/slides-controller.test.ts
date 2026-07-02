@@ -113,4 +113,23 @@ describe("slides controller", () => {
     expect(res.status).toBe(200);
     expect(slides.delete).toHaveBeenCalledWith("org_test_1", "slide_1");
   });
+
+  it("POST /:slideId/duplicate returns 201 and the new slide", async () => {
+    const { app, slides } = makeApp();
+    slides.duplicate.mockResolvedValue(fakeSlide({ id: "slide_dup" }));
+
+    const res = await app.request(`${BASE}/slide_1/duplicate`, { method: "POST" });
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { slide: { id: string } };
+    expect(body.slide.id).toBe("slide_dup");
+    expect(slides.duplicate).toHaveBeenCalledWith("org_test_1", "slide_1");
+  });
+
+  it("POST /:slideId/duplicate maps NotFoundError to 404", async () => {
+    const { app, slides } = makeApp();
+    slides.duplicate.mockRejectedValue(new NotFoundError("nope"));
+
+    const res = await app.request(`${BASE}/missing/duplicate`, { method: "POST" });
+    expect(res.status).toBe(404);
+  });
 });
